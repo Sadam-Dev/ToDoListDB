@@ -8,17 +8,9 @@ import (
 )
 
 func main() {
-	if err := db.ConnectToDB(); err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
-	}
-	defer func() {
-		if err := db.CloseDbConnection(); err != nil {
-			log.Printf("Error closing database connection: %v", err)
-		}
-	}()
-
-	if err := db.Migrate(); err != nil {
-		log.Fatalf("Failed to run database migrations: %v", err)
+	err := db.Migrate()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	for {
@@ -28,7 +20,10 @@ func main() {
 
 		switch choice {
 		case "1":
-			controllers.AddTask()
+			err := controllers.AddTask()
+			if err != nil {
+				log.Fatal(err)
+			}
 		case "2":
 			controllers.PrintALLTasks()
 		case "3":
@@ -37,7 +32,7 @@ func main() {
 			controllers.MarkTaskCompleted()
 		case "5":
 			controllers.DelTaskByID()
-		case "exit":
+		case "0":
 			fmt.Println("Ради были помочь =)")
 			return
 		default:

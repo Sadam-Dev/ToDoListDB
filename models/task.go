@@ -3,9 +3,9 @@ package models
 import "time"
 
 type Task struct {
-	ID          int    `gorm:"primaryKey"`
-	Title       string `gorm:"type:varchar(255)"`
-	Description string `gorm:"type:text"`
+	ID          int
+	Title       string
+	Description string
 	Status      bool
 	IsDeleted   bool
 	CreatedAt   time.Time

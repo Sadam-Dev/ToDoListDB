@@ -5,31 +5,64 @@ import (
 	"todoList/models"
 )
 
-func AddTask(task models.Task) error {
-	return db.GetDBConn().Create(&task).Error
-}
-
-func GetTasks() ([]models.Task, error) {
-	var tasks []models.Task
-	err := db.GetDBConn().Find(&tasks).Error
-	return tasks, err
-}
-
-func UpdateTask(taskID int, title, description string) error {
-	return db.GetDBConn().Model(&models.Task{}).
-		Where("id = ?", taskID).Updates(models.Task{Title: title, Description: description}).Error
-}
-
-func CompleteTask(id int) error {
-	var task models.Task
-	err := db.GetDBConn().First(&task, id).Error
+func AddTask(t models.Task) error {
+	_, err := db.GetDBConn().Exec(db.CreatingTask, t.Title, t.Description)
 	if err != nil {
 		return err
 	}
-	task.Status = !task.Status
-	return db.GetDBConn().Save(&task).Error
+	return nil
+}
+
+func GetTasks() (tasks []models.Task, err error) {
+	rows, err := db.GetDBConn().Query(db.GetAllTasks)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var t models.Task
+		err = rows.Scan(&t.ID, &t.Title, &t.Description, &t.Status, &t.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, t)
+	}
+
+	return tasks, err
+}
+
+func GetTaskByID(id int) (t models.Task, err error) {
+	row := db.GetDBConn().QueryRow(db.GetTaskByID, id)
+
+	err = row.Scan(&t.ID, &t.Title, &t.Description, &t.Status, &t.CreatedAt)
+	if err != nil {
+		return models.Task{}, err
+	}
+	return t, nil
+}
+
+func UpdateTask(t models.Task) error {
+	_, err := db.GetDBConn().Exec(db.UpdateTaskByID, t.Title, t.Description, t.Status, t.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CompleteTask(id int) error {
+	_, err := db.GetDBConn().Exec(db.MarkTaskCompleted, id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func DeleteTask(id int) error {
-	return db.GetDBConn().Delete(&models.Task{}, id).Error
+	_, err := db.GetDBConn().Exec(db.SoftDeleteTaskByID, id)
+	if err != nil {
+		return err
+	}
+	return nil
 }

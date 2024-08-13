@@ -1,33 +1,27 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	_ "github.com/lib/pq"
 )
 
-var dbConn *gorm.DB
+var dbConn *sql.DB
 
 func ConnectToDB() error {
 	connStr := "user=postgres password=12345678 dbname=todo_db sslmode=disable"
-	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return err
 	}
-	fmt.Println("Connected to database")
+	fmt.Println("Successfully connected to DB")
 
 	dbConn = db
 	return nil
 }
 
 func CloseDbConnection() error {
-	sqlDB, err := dbConn.DB()
-	if err != nil {
-		return err
-	}
-
-	err = sqlDB.Close()
+	err := dbConn.Close()
 	if err != nil {
 		return err
 	}
@@ -35,6 +29,6 @@ func CloseDbConnection() error {
 	return nil
 }
 
-func GetDBConn() *gorm.DB {
+func GetDBConn() *sql.DB {
 	return dbConn
 }
